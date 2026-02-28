@@ -171,7 +171,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
     setIsExporting(true)
 
     try {
-      const popup = window.open("", "_blank", "noopener,noreferrer,width=900,height=1100")
+      const popup = window.open("", "_blank", "width=900,height=1100")
       if (!popup) {
         setExportFeedback(t.exportPdfBlocked)
         return
@@ -184,6 +184,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
       const subtitle = escapeHtml(`${t.hexagram} ${hexagram.number}: ${displayHexagramTitle}`)
       const title = escapeHtml(t.shareHeading)
 
+      popup.document.open()
       popup.document.write(`<!doctype html>
 <html>
   <head>
@@ -191,6 +192,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
     <title>${title}</title>
     <style>
       @page { size: A4; margin: 18mm; }
+      html, body { background: #ffffff; }
       body { font-family: Georgia, "Times New Roman", serif; color: #111827; line-height: 1.6; }
       h1 { font-size: 22px; margin: 0 0 4px; }
       h2 { font-size: 15px; margin: 0 0 20px; color: #374151; font-weight: 500; }
@@ -216,7 +218,19 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
 </html>`)
       popup.document.close()
       popup.focus()
-      popup.print()
+
+      const doPrint = () => {
+        popup.focus()
+        popup.print()
+      }
+
+      if (popup.document.readyState === "complete") {
+        setTimeout(doPrint, 150)
+      } else {
+        popup.onload = () => {
+          setTimeout(doPrint, 150)
+        }
+      }
 
       setExportFeedback(t.exportPdfSuccess)
     } catch {
