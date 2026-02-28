@@ -78,6 +78,10 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
 
     async function fetchReading() {
       try {
+        setIsLoading(true)
+        setError(null)
+        setAiReading("")
+
         const response = await fetch("/api/reading", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -88,38 +92,8 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
           throw new Error("Failed to generate reading")
         }
 
-        if (!response.body) {
-          throw new Error("No response body")
-        }
-
-        const reader = response.body.getReader()
-        const decoder = new TextDecoder()
-        let fullText = ""
-
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-
-          const chunk = decoder.decode(value, { stream: true })
-          // Parse SSE format
-          const lines = chunk.split("\n")
-          for (const line of lines) {
-            const trimmed = line.trim()
-            if (trimmed.startsWith("data:")) {
-              const data = trimmed.slice(5).trim()
-              if (data === "[DONE]") continue
-              try {
-                const parsed = JSON.parse(data)
-                if (parsed.type === "text-delta" && parsed.textDelta) {
-                  fullText += parsed.textDelta
-                  setAiReading(fullText)
-                }
-              } catch {
-                // Skip invalid JSON
-              }
-            }
-          }
-        }
+        const data = (await response.json()) as { reading?: string }
+        setAiReading(data.reading || "")
 
         setIsLoading(false)
       } catch (err) {

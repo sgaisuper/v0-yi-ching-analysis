@@ -1,4 +1,3 @@
-import { streamText } from "ai"
 import { type Hexagram } from "@/lib/iching-data"
 import { questions } from "@/lib/iching-data"
 import { isLocale, localizeQuestions, type Locale } from "@/lib/i18n"
@@ -15,12 +14,6 @@ export async function POST(req: Request) {
       : "english"
   const localizedQuestions = localizeQuestions(questions, readingLanguage)
 
-  const languageInstruction =
-    readingLanguage === "zh_hant"
-      ? "Write the full reading in Traditional Chinese (繁體中文)."
-      : readingLanguage === "zh_hans"
-        ? "Write the full reading in Simplified Chinese (简体中文)."
-        : "Write the full reading in English."
   const answerLabel =
     readingLanguage === "zh_hant"
       ? "回答"
@@ -40,39 +33,55 @@ export async function POST(req: Request) {
     .filter(Boolean)
     .join("\n\n")
 
-  const result = streamText({
-    model: "anthropic/claude-sonnet-4",
-    system: `You are a wise Yi Ching (I Ching) oracle interpreter with deep knowledge of Chinese philosophy, Taoist wisdom, and the Book of Changes. 
-    
-Your role is to provide a thoughtful, personalized interpretation of an I Ching hexagram reading based on the querent's current life situation.
-
-Guidelines:
-- Write in a contemplative, poetic yet accessible tone
-- Reference the specific hexagram's traditional meaning and imagery
-- Connect the hexagram's wisdom directly to the person's stated situation
-- Offer practical guidance grounded in the hexagram's philosophy
-- Use metaphors from nature and the five elements where appropriate
-- Be encouraging but honest — the I Ching does not shy from difficult truths
-- Keep the reading focused and meaningful, roughly 300-400 words
-- Structure the reading with natural paragraph breaks
-- Do not use markdown headers or bullet points — write in flowing prose
-- Address the reader directly as "you"
-- ${languageInstruction}`,
-    prompt: `The querent has drawn Hexagram ${hexagram.number}: ${hexagram.name} (${hexagram.chineseName}).
-
-Trigrams: ${hexagram.trigrams.upper} over ${hexagram.trigrams.lower}
-Meaning: ${hexagram.meaning}
-Judgment: ${hexagram.judgment}
-Image: ${hexagram.image}
-
-Here is a summary of their current life situation based on their questionnaire responses:
-
-${answerSummary}
-
-Please provide a deeply personal and insightful I Ching reading that weaves the hexagram's wisdom with their specific circumstances. Help them understand what this hexagram reveals about their path forward.`,
-    temperature: 0.8,
-    maxOutputTokens: 1500,
+  const contextLines = answerSummary.split("\n\n").filter(Boolean)
+  const reading = buildOfflineReading({
+    locale: readingLanguage,
+    hexagram,
+    contextLines,
   })
 
-  return result.toUIMessageStreamResponse()
+  return Response.json({ reading })
+}
+
+function buildOfflineReading({
+  locale,
+  hexagram,
+  contextLines,
+}: {
+  locale: Locale
+  hexagram: Hexagram
+  contextLines: string[]
+}) {
+  const contextPreview = contextLines
+    .slice(0, 4)
+    .map((line) => line.replace(/\n/g, " - "))
+    .join(locale === "english" ? "; " : "；")
+
+  if (locale === "zh_hant") {
+    return [
+      `你所得為第${hexagram.number}卦「${hexagram.chineseName}・${hexagram.name}」。`,
+      `你此刻的關鍵處境包括：${contextPreview || "你正處於需要重新校準步伐的時刻"}。`,
+      `卦義提示「${hexagram.meaning}」。卦辭為「${hexagram.judgment}」。象傳為「${hexagram.image}」。`,
+      "此卦提醒你先安定內在，再推進外在行動。若遇阻隔，不必強行突破，先調整節奏、整合關係與資源，時機成熟再前行。",
+      "接下來可做三件事：第一，聚焦一件最重要的事；第二，減少分散注意力的承諾；第三，以穩定且可持續的步伐連續實踐七日。如此，變化會由內而外展開。",
+    ].join("\n\n")
+  }
+
+  if (locale === "zh_hans") {
+    return [
+      `你所得为第${hexagram.number}卦「${hexagram.chineseName}・${hexagram.name}」。`,
+      `你此刻的关键处境包括：${contextPreview || "你正处于需要重新校准步伐的时刻"}。`,
+      `卦义提示「${hexagram.meaning}」。卦辞为「${hexagram.judgment}」。象传为「${hexagram.image}」。`,
+      "此卦提醒你先安定内在，再推进外在行动。若遇阻隔，不必强行突破，先调整节奏、整合关系与资源，时机成熟再前行。",
+      "接下来可做三件事：第一，聚焦一件最重要的事；第二，减少分散注意力的承诺；第三，以稳定且可持续的步伐连续实践七日。如此，变化会由内而外展开。",
+    ].join("\n\n")
+  }
+
+  return [
+    `You drew Hexagram ${hexagram.number}: ${hexagram.name} (${hexagram.chineseName}).`,
+    `Your present situation highlights: ${contextPreview || "a period that asks for recalibration and patience"}.`,
+    `The core meaning is "${hexagram.meaning}." The Judgment says "${hexagram.judgment}" and the Image says "${hexagram.image}".`,
+    "This reading points to steady inner alignment before outer force. If you feel blocked, do not push harder first. Clarify priorities, strengthen useful alliances, and move when timing supports momentum.",
+    "For the next seven days: choose one essential action, remove one draining distraction, and maintain one daily grounding practice. Small consistency now creates clear movement forward.",
+  ].join("\n\n")
 }
