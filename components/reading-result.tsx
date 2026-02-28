@@ -5,20 +5,23 @@ import { type Hexagram } from "@/lib/iching-data"
 import { HexagramDisplay } from "@/components/hexagram-display"
 import { Button } from "@/components/ui/button"
 import { RotateCcw, Loader2, Share2 } from "lucide-react"
+import { getUIStrings, type Locale } from "@/lib/i18n"
 
 interface ReadingResultProps {
   hexagram: Hexagram
   answers: Record<string, string>
   onRestart: () => void
+  locale: Locale
 }
 
-export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultProps) {
+export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingResultProps) {
   const [aiReading, setAiReading] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
   const [isSharing, setIsSharing] = useState(false)
   const hasStartedRef = useRef(false)
+  const t = getUIStrings(locale)
 
   useEffect(() => {
     if (hasStartedRef.current) return
@@ -72,7 +75,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
         setIsLoading(false)
       } catch (err) {
         console.error("Error fetching reading:", err)
-        setError("The oracle is momentarily unavailable. Please try again.")
+        setError(t.errorOracleUnavailable)
         setIsLoading(false)
       }
     }
@@ -84,9 +87,9 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
     if (typeof window === "undefined") return
 
     const shareText = [
-      `Yi Ching Oracle Reading`,
-      `Hexagram ${hexagram.number}: ${hexagram.name} (${hexagram.chineseName})`,
-      aiReading || "I received an I Ching reading and wanted to share it with you.",
+      t.shareHeading,
+      `${t.hexagram} ${hexagram.number}: ${hexagram.name} (${hexagram.chineseName})`,
+      aiReading || t.shareFallbackText,
     ].join("\n\n")
 
     const shareUrl = window.location.href
@@ -96,26 +99,26 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `Yi Ching Reading: ${hexagram.name}`,
+          title: `${t.shareTitlePrefix}: ${hexagram.name}`,
           text: shareText,
           url: shareUrl,
         })
-        setShareFeedback("Reading shared.")
+        setShareFeedback(t.sharedSuccess)
         return
       }
 
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`)
-        setShareFeedback("Reading copied to clipboard.")
+        setShareFeedback(t.copiedSuccess)
         return
       }
 
-      setShareFeedback("Sharing is not supported on this device.")
+      setShareFeedback(t.shareUnsupported)
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         return
       }
-      setShareFeedback("Unable to share right now. Please try again.")
+      setShareFeedback(t.shareFailed)
     } finally {
       setIsSharing(false)
     }
@@ -126,7 +129,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
       {/* Header */}
       <div className="flex flex-col items-center gap-6 text-center">
         <span className="text-xs uppercase tracking-[0.3em] text-primary font-sans">
-          Your Hexagram
+          {t.yourHexagram}
         </span>
 
         <HexagramDisplay lines={hexagram.lines} size="lg" animated />
@@ -139,7 +142,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
             {hexagram.name}
           </h2>
           <p className="text-sm text-muted-foreground font-sans">
-            Hexagram {hexagram.number} &middot; {hexagram.trigrams.upper} over{" "}
+            {t.hexagram} {hexagram.number} &middot; {hexagram.trigrams.upper} {t.trigramOver}{" "}
             {hexagram.trigrams.lower}
           </p>
         </div>
@@ -156,7 +159,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-3">
           <h3 className="text-xs uppercase tracking-[0.2em] text-primary font-sans">
-            Meaning
+            {t.meaning}
           </h3>
           <p className="text-base text-foreground/90 font-serif leading-relaxed italic">
             {hexagram.meaning}
@@ -165,7 +168,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
 
         <div className="flex flex-col gap-3">
           <h3 className="text-xs uppercase tracking-[0.2em] text-primary font-sans">
-            The Judgment
+            {t.judgment}
           </h3>
           <p className="text-base text-foreground/90 font-serif leading-relaxed">
             {hexagram.judgment}
@@ -174,7 +177,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
 
         <div className="flex flex-col gap-3">
           <h3 className="text-xs uppercase tracking-[0.2em] text-primary font-sans">
-            The Image
+            {t.image}
           </h3>
           <p className="text-base text-foreground/90 font-serif leading-relaxed">
             {hexagram.image}
@@ -192,7 +195,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
       {/* AI Interpretation */}
       <div className="flex flex-col gap-4">
         <h3 className="text-xs uppercase tracking-[0.2em] text-primary font-sans">
-          Your Personal Reading
+          {t.personalReading}
         </h3>
 
         {error ? (
@@ -209,7 +212,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
               <div className="flex items-center gap-3 text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-sm font-sans">
-                  The oracle is contemplating your situation...
+                  {t.loadingReading}
                 </span>
               </div>
             ) : null}
@@ -230,7 +233,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
             className="border-border text-muted-foreground hover:text-foreground hover:border-primary/60"
           >
             <Share2 className="mr-2 h-4 w-4" />
-            {isSharing ? "Sharing..." : "Share Reading"}
+            {isSharing ? t.sharing : t.shareReading}
           </Button>
 
           <Button
@@ -239,7 +242,7 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
             className="border-border text-muted-foreground hover:text-foreground hover:border-primary/60"
           >
             <RotateCcw className="mr-2 h-4 w-4" />
-            Consult the Oracle Again
+            {t.consultAgain}
           </Button>
         </div>
 

@@ -1,13 +1,21 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { questions, type QuestionnaireQuestion } from "@/lib/iching-data"
 import { cn } from "@/lib/utils"
 import { ChevronRight, ChevronLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  getUIStrings,
+  localizeQuestions,
+  type Locale,
+  isLocale,
+} from "@/lib/i18n"
 
 interface QuestionnaireProps {
   onComplete: (answers: Record<string, string>) => void
+  locale: Locale
+  onLocaleChange: (locale: Locale) => void
 }
 
 function QuestionStep({
@@ -63,15 +71,22 @@ function QuestionStep({
   )
 }
 
-function ProgressBar({ current, total }: { current: number; total: number }) {
+function ProgressBar({
+  current,
+  total,
+  locale,
+}: {
+  current: number
+  total: number
+  locale: Locale
+}) {
   const progress = ((current + 1) / total) * 100
+  const t = getUIStrings(locale)
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between text-xs text-muted-foreground font-sans">
-        <span>
-          Question {current + 1} of {total}
-        </span>
+        <span>{t.questionOf(current + 1, total)}</span>
         <span>{Math.round(progress)}%</span>
       </div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-secondary">
@@ -84,15 +99,33 @@ function ProgressBar({ current, total }: { current: number; total: number }) {
   )
 }
 
-export function Questionnaire({ onComplete }: QuestionnaireProps) {
+export function Questionnaire({ onComplete, locale, onLocaleChange }: QuestionnaireProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [answers, setAnswers] = useState<Record<string, string>>({
+    reading_language: locale,
+  })
+  const localizedQuestions = useMemo(
+    () => localizeQuestions(questions, locale),
+    [locale]
+  )
+  const t = getUIStrings(locale)
 
-  const currentQuestion = questions[currentStep]
-  const isLastStep = currentStep === questions.length - 1
+  const currentQuestion = localizedQuestions[currentStep]
+  const isLastStep = currentStep === localizedQuestions.length - 1
   const canGoNext = !!answers[currentQuestion.id]
 
+  useEffect(() => {
+    setAnswers((prev) => ({
+      ...prev,
+      reading_language: locale,
+    }))
+  }, [locale])
+
   function handleSelect(value: string) {
+    if (currentQuestion.id === "reading_language" && isLocale(value)) {
+      onLocaleChange(value)
+    }
+
     setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: value,
@@ -115,7 +148,7 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
 
   return (
     <div className="flex flex-col gap-8">
-      <ProgressBar current={currentStep} total={questions.length} />
+      <ProgressBar current={currentStep} total={localizedQuestions.length} locale={locale} />
 
       <div
         key={currentQuestion.id}
@@ -136,7 +169,7 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
           className="text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
-          Previous
+          {t.previous}
         </Button>
 
         <Button
@@ -144,7 +177,7 @@ export function Questionnaire({ onComplete }: QuestionnaireProps) {
           disabled={!canGoNext}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
         >
-          {isLastStep ? "Reveal My Reading" : "Continue"}
+          {isLastStep ? t.revealReading : t.continue}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>

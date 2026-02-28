@@ -1,6 +1,7 @@
 import { streamText } from "ai"
 import { type Hexagram } from "@/lib/iching-data"
 import { questions } from "@/lib/iching-data"
+import { isLocale, localizeQuestions, type Locale } from "@/lib/i18n"
 
 export async function POST(req: Request) {
   const { hexagram, answers } = (await req.json()) as {
@@ -8,22 +9,33 @@ export async function POST(req: Request) {
     answers: Record<string, string>
   }
 
-  const readingLanguage = answers.reading_language || "english"
+  const readingLanguage: Locale =
+    typeof answers.reading_language === "string" && isLocale(answers.reading_language)
+      ? answers.reading_language
+      : "english"
+  const localizedQuestions = localizeQuestions(questions, readingLanguage)
+
   const languageInstruction =
     readingLanguage === "zh_hant"
       ? "Write the full reading in Traditional Chinese (繁體中文)."
       : readingLanguage === "zh_hans"
         ? "Write the full reading in Simplified Chinese (简体中文)."
         : "Write the full reading in English."
+  const answerLabel =
+    readingLanguage === "zh_hant"
+      ? "回答"
+      : readingLanguage === "zh_hans"
+        ? "回答"
+        : "Answer"
 
   // Build a context summary of the user's answers
   const answerSummary = Object.entries(answers)
     .filter(([id]) => id !== "reading_language")
     .map(([id, value]) => {
-      const question = questions.find((q) => q.id === id)
+      const question = localizedQuestions.find((q) => q.id === id)
       if (!question) return ""
       const selectedOption = question.options.find((o) => o.value === value)
-      return `${question.category}: ${question.question}\nAnswer: ${selectedOption?.label || value}`
+      return `${question.category}: ${question.question}\n${answerLabel}: ${selectedOption?.label || value}`
     })
     .filter(Boolean)
     .join("\n\n")
