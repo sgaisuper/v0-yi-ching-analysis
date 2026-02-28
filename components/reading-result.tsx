@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { type Hexagram } from "@/lib/iching-data"
 import { HexagramDisplay } from "@/components/hexagram-display"
 import { Button } from "@/components/ui/button"
-import { RotateCcw, Loader2 } from "lucide-react"
+import { RotateCcw, Loader2, Share2 } from "lucide-react"
 
 interface ReadingResultProps {
   hexagram: Hexagram
@@ -16,6 +16,8 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
   const [aiReading, setAiReading] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null)
+  const [isSharing, setIsSharing] = useState(false)
   const hasStartedRef = useRef(false)
 
   useEffect(() => {
@@ -77,6 +79,47 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
 
     fetchReading()
   }, [hexagram, answers])
+
+  async function handleShare() {
+    if (typeof window === "undefined") return
+
+    const shareText = [
+      `Yi Ching Oracle Reading`,
+      `Hexagram ${hexagram.number}: ${hexagram.name} (${hexagram.chineseName})`,
+      aiReading || "I received an I Ching reading and wanted to share it with you.",
+    ].join("\n\n")
+
+    const shareUrl = window.location.href
+    setShareFeedback(null)
+    setIsSharing(true)
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `Yi Ching Reading: ${hexagram.name}`,
+          text: shareText,
+          url: shareUrl,
+        })
+        setShareFeedback("Reading shared.")
+        return
+      }
+
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`)
+        setShareFeedback("Reading copied to clipboard.")
+        return
+      }
+
+      setShareFeedback("Sharing is not supported on this device.")
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return
+      }
+      setShareFeedback("Unable to share right now. Please try again.")
+    } finally {
+      setIsSharing(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-10 animate-in fade-in duration-700">
@@ -178,15 +221,31 @@ export function ReadingResult({ hexagram, answers, onRestart }: ReadingResultPro
       </div>
 
       {/* Action */}
-      <div className="flex justify-center pt-4">
-        <Button
-          variant="outline"
-          onClick={onRestart}
-          className="border-border text-muted-foreground hover:text-foreground hover:border-primary/60"
-        >
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Consult the Oracle Again
-        </Button>
+      <div className="flex flex-col items-center gap-3 pt-4">
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Button
+            variant="outline"
+            onClick={handleShare}
+            disabled={isSharing || isLoading || !!error}
+            className="border-border text-muted-foreground hover:text-foreground hover:border-primary/60"
+          >
+            <Share2 className="mr-2 h-4 w-4" />
+            {isSharing ? "Sharing..." : "Share Reading"}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={onRestart}
+            className="border-border text-muted-foreground hover:text-foreground hover:border-primary/60"
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Consult the Oracle Again
+          </Button>
+        </div>
+
+        {shareFeedback && (
+          <p className="text-xs text-muted-foreground font-sans">{shareFeedback}</p>
+        )}
       </div>
     </div>
   )
