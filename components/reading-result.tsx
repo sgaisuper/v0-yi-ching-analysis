@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { type Hexagram } from "@/lib/iching-data"
 import { HexagramDisplay } from "@/components/hexagram-display"
 import { Button } from "@/components/ui/button"
-import { RotateCcw, Loader2, Share2 } from "lucide-react"
+import { RotateCcw, Loader2, Share2, FileDown } from "lucide-react"
 import { getUIStrings, localizeTrigram, type Locale } from "@/lib/i18n"
 
 interface ReadingResultProps {
@@ -24,7 +24,9 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
     image: string
   } | null>(null)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null)
   const [isSharing, setIsSharing] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const hasStartedRef = useRef(false)
   const t = getUIStrings(locale)
   const displayUpperTrigram = localizeTrigram(hexagram.trigrams.upper, locale)
@@ -153,6 +155,77 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
     }
   }
 
+  function escapeHtml(input: string) {
+    return input
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;")
+  }
+
+  function handleExportPdf() {
+    if (typeof window === "undefined") return
+
+    setExportFeedback(null)
+    setIsExporting(true)
+
+    try {
+      const popup = window.open("", "_blank", "noopener,noreferrer,width=900,height=1100")
+      if (!popup) {
+        setExportFeedback(t.exportPdfBlocked)
+        return
+      }
+
+      const bodyText = escapeHtml(aiReading || "")
+      const meaningText = escapeHtml(translatedText?.meaning || hexagram.meaning)
+      const judgmentText = escapeHtml(translatedText?.judgment || hexagram.judgment)
+      const imageText = escapeHtml(translatedText?.image || hexagram.image)
+      const subtitle = escapeHtml(`${t.hexagram} ${hexagram.number}: ${displayHexagramTitle}`)
+      const title = escapeHtml(t.shareHeading)
+
+      popup.document.write(`<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${title}</title>
+    <style>
+      @page { size: A4; margin: 18mm; }
+      body { font-family: Georgia, "Times New Roman", serif; color: #111827; line-height: 1.6; }
+      h1 { font-size: 22px; margin: 0 0 4px; }
+      h2 { font-size: 15px; margin: 0 0 20px; color: #374151; font-weight: 500; }
+      h3 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; margin: 18px 0 6px; color: #6b7280; }
+      p { white-space: pre-wrap; margin: 0 0 10px; }
+      .divider { height: 1px; background: #e5e7eb; margin: 16px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>${title}</h1>
+    <h2>${subtitle}</h2>
+    <div class="divider"></div>
+    <h3>${escapeHtml(t.meaning)}</h3>
+    <p>${meaningText}</p>
+    <h3>${escapeHtml(t.judgment)}</h3>
+    <p>${judgmentText}</p>
+    <h3>${escapeHtml(t.image)}</h3>
+    <p>${imageText}</p>
+    <div class="divider"></div>
+    <h3>${escapeHtml(t.personalReading)}</h3>
+    <p>${bodyText}</p>
+  </body>
+</html>`)
+      popup.document.close()
+      popup.focus()
+      popup.print()
+
+      setExportFeedback(t.exportPdfSuccess)
+    } catch {
+      setExportFeedback(t.exportPdfFailed)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-10 animate-in fade-in duration-700">
       {/* Header */}
@@ -264,6 +337,15 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
             <Share2 className="mr-2 h-4 w-4" />
             {isSharing ? t.sharing : t.shareReading}
           </Button>
+          <Button
+            variant="outline"
+            onClick={handleExportPdf}
+            disabled={isExporting || isLoading || !!error}
+            className="border-border text-muted-foreground hover:text-foreground hover:border-primary/60"
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            {isExporting ? t.exportingPdf : t.exportPdf}
+          </Button>
 
           <Button
             variant="outline"
@@ -277,6 +359,9 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
 
         {shareFeedback && (
           <p className="text-xs text-muted-foreground font-sans">{shareFeedback}</p>
+        )}
+        {exportFeedback && (
+          <p className="text-xs text-muted-foreground font-sans">{exportFeedback}</p>
         )}
       </div>
     </div>

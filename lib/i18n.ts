@@ -37,11 +37,16 @@ type UIStrings = {
   errorOracleUnavailable: string
   shareReading: string
   sharing: string
+  exportPdf: string
+  exportingPdf: string
   consultAgain: string
   sharedSuccess: string
   copiedSuccess: string
   shareUnsupported: string
   shareFailed: string
+  exportPdfSuccess: string
+  exportPdfBlocked: string
+  exportPdfFailed: string
   shareFallbackText: string
   shareTitlePrefix: string
   shareHeading: string
@@ -73,11 +78,16 @@ const uiStrings: Record<Locale, UIStrings> = {
     errorOracleUnavailable: "The oracle is momentarily unavailable. Please try again.",
     shareReading: "Share Reading",
     sharing: "Sharing...",
+    exportPdf: "Export PDF",
+    exportingPdf: "Exporting...",
     consultAgain: "Consult the Oracle Again",
     sharedSuccess: "Reading shared.",
     copiedSuccess: "Reading copied to clipboard.",
     shareUnsupported: "Sharing is not supported on this device.",
     shareFailed: "Unable to share right now. Please try again.",
+    exportPdfSuccess: "PDF export opened.",
+    exportPdfBlocked: "Please allow pop-ups to export PDF.",
+    exportPdfFailed: "Unable to export PDF right now.",
     shareFallbackText:
       "I received an I Ching reading and wanted to share it with you.",
     shareTitlePrefix: "Yi Ching Reading",
@@ -108,11 +118,16 @@ const uiStrings: Record<Locale, UIStrings> = {
     errorOracleUnavailable: "神谕暂时不可用，请稍后再试。",
     shareReading: "分享解读",
     sharing: "分享中...",
+    exportPdf: "导出 PDF",
+    exportingPdf: "导出中...",
     consultAgain: "再次请示神谕",
     sharedSuccess: "已分享解读。",
     copiedSuccess: "解读已复制到剪贴板。",
     shareUnsupported: "此设备不支持分享。",
     shareFailed: "暂时无法分享，请稍后再试。",
+    exportPdfSuccess: "已打开 PDF 导出窗口。",
+    exportPdfBlocked: "请允许弹窗后再导出 PDF。",
+    exportPdfFailed: "暂时无法导出 PDF。",
     shareFallbackText: "我刚刚得到一则易经解读，想分享给你。",
     shareTitlePrefix: "易经解读",
     shareHeading: "易经神谕解读",
@@ -142,11 +157,16 @@ const uiStrings: Record<Locale, UIStrings> = {
     errorOracleUnavailable: "神諭暫時不可用，請稍後再試。",
     shareReading: "分享解讀",
     sharing: "分享中...",
+    exportPdf: "匯出 PDF",
+    exportingPdf: "匯出中...",
     consultAgain: "再次請示神諭",
     sharedSuccess: "已分享解讀。",
     copiedSuccess: "解讀已複製到剪貼簿。",
     shareUnsupported: "此裝置不支援分享。",
     shareFailed: "暫時無法分享，請稍後再試。",
+    exportPdfSuccess: "已開啟 PDF 匯出視窗。",
+    exportPdfBlocked: "請允許彈出視窗後再匯出 PDF。",
+    exportPdfFailed: "暫時無法匯出 PDF。",
     shareFallbackText: "我剛剛得到一則易經解讀，想分享給你。",
     shareTitlePrefix: "易經解讀",
     shareHeading: "易經神諭解讀",
