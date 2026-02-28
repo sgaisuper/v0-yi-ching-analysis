@@ -376,3 +376,21 @@ export function localizeQuestions(
 ): QuestionnaireQuestion[] {
   return sourceQuestions.map((question) => localizeQuestion(question, locale))
 }
+
+const trigramMap: Record<string, { zh_hans: string; zh_hant: string }> = {
+  Heaven: { zh_hans: "天", zh_hant: "天" },
+  Earth: { zh_hans: "地", zh_hant: "地" },
+  Water: { zh_hans: "水", zh_hant: "水" },
+  Fire: { zh_hans: "火", zh_hant: "火" },
+  Thunder: { zh_hans: "雷", zh_hant: "雷" },
+  Mountain: { zh_hans: "山", zh_hant: "山" },
+  Wind: { zh_hans: "风", zh_hant: "風" },
+  Lake: { zh_hans: "泽", zh_hant: "澤" },
+}
+
+export function localizeTrigram(trigram: string, locale: Locale): string {
+  if (locale === "english") return trigram
+  const found = trigramMap[trigram]
+  if (!found) return trigram
+  return locale === "zh_hant" ? found.zh_hant : found.zh_hans
+}

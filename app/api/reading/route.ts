@@ -59,9 +59,9 @@ function buildOfflineReading({
 
   if (locale === "zh_hant") {
     return [
-      `你所得為第${hexagram.number}卦「${hexagram.chineseName}・${hexagram.name}」。`,
+      `你所得為第${hexagram.number}卦「${hexagram.chineseName}」。`,
       `你此刻的關鍵處境包括：${contextPreview || "你正處於需要重新校準步伐的時刻"}。`,
-      `卦義提示「${hexagram.meaning}」。卦辭為「${hexagram.judgment}」。象傳為「${hexagram.image}」。`,
+      "卦義提醒你在流變之中守住本心；卦辭主張審時而進；象傳則勸你先整合內外，再推動關鍵一步。",
       "此卦提醒你先安定內在，再推進外在行動。若遇阻隔，不必強行突破，先調整節奏、整合關係與資源，時機成熟再前行。",
       "接下來可做三件事：第一，聚焦一件最重要的事；第二，減少分散注意力的承諾；第三，以穩定且可持續的步伐連續實踐七日。如此，變化會由內而外展開。",
     ].join("\n\n")
@@ -69,9 +69,9 @@ function buildOfflineReading({
 
   if (locale === "zh_hans") {
     return [
-      `你所得为第${hexagram.number}卦「${hexagram.chineseName}・${hexagram.name}」。`,
+      `你所得为第${hexagram.number}卦「${hexagram.chineseName}」。`,
       `你此刻的关键处境包括：${contextPreview || "你正处于需要重新校准步伐的时刻"}。`,
-      `卦义提示「${hexagram.meaning}」。卦辞为「${hexagram.judgment}」。象传为「${hexagram.image}」。`,
+      "卦义提醒你在流变之中守住本心；卦辞主张审时而进；象传则劝你先整合内外，再推动关键一步。",
       "此卦提醒你先安定内在，再推进外在行动。若遇阻隔，不必强行突破，先调整节奏、整合关系与资源，时机成熟再前行。",
       "接下来可做三件事：第一，聚焦一件最重要的事；第二，减少分散注意力的承诺；第三，以稳定且可持续的步伐连续实践七日。如此，变化会由内而外展开。",
     ].join("\n\n")

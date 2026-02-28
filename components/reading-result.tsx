@@ -5,7 +5,7 @@ import { type Hexagram } from "@/lib/iching-data"
 import { HexagramDisplay } from "@/components/hexagram-display"
 import { Button } from "@/components/ui/button"
 import { RotateCcw, Loader2, Share2 } from "lucide-react"
-import { getUIStrings, type Locale } from "@/lib/i18n"
+import { getUIStrings, localizeTrigram, type Locale } from "@/lib/i18n"
 
 interface ReadingResultProps {
   hexagram: Hexagram
@@ -27,6 +27,12 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
   const [isSharing, setIsSharing] = useState(false)
   const hasStartedRef = useRef(false)
   const t = getUIStrings(locale)
+  const displayUpperTrigram = localizeTrigram(hexagram.trigrams.upper, locale)
+  const displayLowerTrigram = localizeTrigram(hexagram.trigrams.lower, locale)
+  const displayHexagramTitle =
+    locale === "english"
+      ? `${hexagram.name} (${hexagram.chineseName})`
+      : `第${hexagram.number}卦 ${hexagram.chineseName}`
 
   useEffect(() => {
     let isCancelled = false
@@ -111,7 +117,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
 
     const shareText = [
       t.shareHeading,
-      `${t.hexagram} ${hexagram.number}: ${hexagram.name} (${hexagram.chineseName})`,
+      `${t.hexagram} ${hexagram.number}: ${displayHexagramTitle}`,
       aiReading || t.shareFallbackText,
     ].join("\n\n")
 
@@ -122,7 +128,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${t.shareTitlePrefix}: ${hexagram.name}`,
+          title: `${t.shareTitlePrefix}: ${displayHexagramTitle}`,
           text: shareText,
           url: shareUrl,
         })
@@ -162,11 +168,11 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
             {hexagram.chineseName}
           </h1>
           <h2 className="text-xl md:text-2xl font-serif text-primary">
-            {hexagram.name}
+            {locale === "english" ? hexagram.name : `${t.hexagram} ${hexagram.number}`}
           </h2>
           <p className="text-sm text-muted-foreground font-sans">
-            {t.hexagram} {hexagram.number} &middot; {hexagram.trigrams.upper} {t.trigramOver}{" "}
-            {hexagram.trigrams.lower}
+            {t.hexagram} {hexagram.number} &middot; {displayUpperTrigram} {t.trigramOver}{" "}
+            {displayLowerTrigram}
           </p>
         </div>
       </div>
