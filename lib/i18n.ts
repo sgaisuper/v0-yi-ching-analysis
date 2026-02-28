@@ -252,15 +252,6 @@ const questionTranslations: Record<
         lesson: "寻找变化中的课题与启示",
       },
     },
-    reading_language: {
-      category: "解读偏好",
-      question: "你希望专属解读使用哪种语言？",
-      options: {
-        english: "英文",
-        zh_hans: "简体中文",
-        zh_hant: "繁體中文",
-      },
-    },
   },
   zh_hant: {
     life_phase: {
@@ -349,15 +340,6 @@ const questionTranslations: Record<
         overwhelmed: "常被變化壓得喘不過氣",
         careful: "謹慎規劃、緩慢推進",
         lesson: "尋找變化中的課題與啟示",
-      },
-    },
-    reading_language: {
-      category: "解讀偏好",
-      question: "你希望專屬解讀使用哪種語言？",
-      options: {
-        english: "英文",
-        zh_hans: "簡體中文",
-        zh_hant: "繁體中文",
       },
     },
   },

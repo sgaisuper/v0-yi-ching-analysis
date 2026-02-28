@@ -756,24 +756,12 @@ export const questions: QuestionnaireQuestion[] = [
       { label: "I seek the lesson within the change", value: "lesson" },
     ],
   },
-  {
-    id: "reading_language",
-    category: "Reading Preferences",
-    question: "Which language would you like for your personal reading?",
-    options: [
-      { label: "English", value: "english" },
-      { label: "Simplified Chinese (简体中文)", value: "zh_hans" },
-      { label: "Traditional Chinese (繁體中文)", value: "zh_hant" },
-    ],
-  },
 ]
 
 export function generateHexagramFromAnswers(answers: Record<string, string>): Hexagram {
   // Use the answers to deterministically select a hexagram
   // Each answer contributes to building the hexagram lines
-  const answerValues = Object.entries(answers)
-    .filter(([id]) => id !== "reading_language")
-    .map(([, value]) => value)
+  const answerValues = Object.values(answers)
   
   // Create a hash from all answers
   let hash = 0

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { questions, type QuestionnaireQuestion } from "@/lib/iching-data"
 import { cn } from "@/lib/utils"
 import { ChevronRight, ChevronLeft } from "lucide-react"
@@ -9,13 +9,11 @@ import {
   getUIStrings,
   localizeQuestions,
   type Locale,
-  isLocale,
 } from "@/lib/i18n"
 
 interface QuestionnaireProps {
   onComplete: (answers: Record<string, string>) => void
   locale: Locale
-  onLocaleChange: (locale: Locale) => void
 }
 
 function QuestionStep({
@@ -99,11 +97,9 @@ function ProgressBar({
   )
 }
 
-export function Questionnaire({ onComplete, locale, onLocaleChange }: QuestionnaireProps) {
+export function Questionnaire({ onComplete, locale }: QuestionnaireProps) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, string>>({
-    reading_language: locale,
-  })
+  const [answers, setAnswers] = useState<Record<string, string>>({})
   const localizedQuestions = useMemo(
     () => localizeQuestions(questions, locale),
     [locale]
@@ -114,18 +110,7 @@ export function Questionnaire({ onComplete, locale, onLocaleChange }: Questionna
   const isLastStep = currentStep === localizedQuestions.length - 1
   const canGoNext = !!answers[currentQuestion.id]
 
-  useEffect(() => {
-    setAnswers((prev) => ({
-      ...prev,
-      reading_language: locale,
-    }))
-  }, [locale])
-
   function handleSelect(value: string) {
-    if (currentQuestion.id === "reading_language" && isLocale(value)) {
-      onLocaleChange(value)
-    }
-
     setAnswers((prev) => ({
       ...prev,
       [currentQuestion.id]: value,

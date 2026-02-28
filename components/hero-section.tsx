@@ -30,19 +30,32 @@ export function HeroSection({ onBegin, locale, onLocaleChange }: HeroSectionProp
       </div>
 
       <div className="relative flex flex-col items-center gap-10 text-center">
-        <div className="absolute -top-14 right-0">
-          <select
-            value={locale}
-            onChange={(event) => onLocaleChange(event.target.value as Locale)}
+        <div className="absolute -top-16 right-0">
+          <div
+            role="group"
             aria-label="Language"
-            className="rounded-md border border-border bg-background px-3 py-2 text-xs font-sans text-muted-foreground"
+            className="inline-flex items-center rounded-full border border-border/80 bg-background/80 p-1 shadow-sm backdrop-blur-sm"
           >
-            {localeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            {localeOptions.map((option) => {
+              const isActive = locale === option.value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => onLocaleChange(option.value as Locale)}
+                  aria-pressed={isActive}
+                  className={[
+                    "rounded-full px-3 py-1.5 text-xs font-sans transition-colors",
+                    isActive
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-primary/10",
+                  ].join(" ")}
+                >
+                  {option.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Symbol */}

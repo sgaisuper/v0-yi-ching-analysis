@@ -8,8 +8,6 @@ import { generateHexagramFromAnswers, type Hexagram } from "@/lib/iching-data"
 import {
   defaultLocale,
   getUIStrings,
-  isLocale,
-  localeOptions,
   type Locale,
 } from "@/lib/i18n"
 
@@ -33,27 +31,11 @@ export default function Home() {
 
   function handleLocaleChange(nextLocale: Locale) {
     setLocale(nextLocale)
-    setAnswers((prev) => ({
-      ...prev,
-      reading_language: nextLocale,
-    }))
   }
 
   function handleComplete(newAnswers: Record<string, string>) {
-    const selectedLanguage = newAnswers.reading_language
-    const nextLocale =
-      typeof selectedLanguage === "string" && isLocale(selectedLanguage)
-        ? selectedLanguage
-        : locale
-
-    const mergedAnswers = {
-      ...newAnswers,
-      reading_language: nextLocale,
-    }
-
-    setLocale(nextLocale)
-    setAnswers(mergedAnswers)
-    const result = generateHexagramFromAnswers(mergedAnswers)
+    setAnswers(newAnswers)
+    const result = generateHexagramFromAnswers(newAnswers)
     setHexagram(result)
     setState("reading")
     window.scrollTo({ top: 0, behavior: "smooth" })
@@ -84,27 +66,12 @@ export default function Home() {
               <span className="text-lg font-serif text-foreground">
                 {t.appTitle}
               </span>
-              <div className="flex items-center gap-3">
-                <select
-                  value={locale}
-                  onChange={(event) => handleLocaleChange(event.target.value as Locale)}
-                  aria-label="Language"
-                  className="rounded-md border border-border bg-background px-2 py-1 text-xs font-sans text-muted-foreground"
-                >
-                  {localeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                <button
-                  onClick={handleRestart}
-                  className="text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors font-sans"
-                >
-                  {t.startOver}
-                </button>
-              </div>
+              <button
+                onClick={handleRestart}
+                className="text-xs uppercase tracking-[0.15em] text-muted-foreground hover:text-primary transition-colors font-sans"
+              >
+                {t.startOver}
+              </button>
             </div>
           </header>
 
@@ -116,7 +83,6 @@ export default function Home() {
             <Questionnaire
               onComplete={handleComplete}
               locale={locale}
-              onLocaleChange={handleLocaleChange}
             />
           </div>
         </div>
@@ -130,23 +96,9 @@ export default function Home() {
               <span className="text-lg font-serif text-foreground">
                 {t.appTitle}
               </span>
-              <div className="flex items-center gap-3">
-                <select
-                  value={locale}
-                  onChange={(event) => handleLocaleChange(event.target.value as Locale)}
-                  aria-label="Language"
-                  className="rounded-md border border-border bg-background px-2 py-1 text-xs font-sans text-muted-foreground"
-                >
-                  {localeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground font-sans">
-                  {t.yourReading}
-                </span>
-              </div>
+              <span className="text-xs uppercase tracking-[0.15em] text-muted-foreground font-sans">
+                {t.yourReading}
+              </span>
             </div>
           </header>
 

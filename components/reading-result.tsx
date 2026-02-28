@@ -18,10 +18,59 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
   const [aiReading, setAiReading] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [translatedText, setTranslatedText] = useState<{
+    meaning: string
+    judgment: string
+    image: string
+  } | null>(null)
   const [shareFeedback, setShareFeedback] = useState<string | null>(null)
   const [isSharing, setIsSharing] = useState(false)
   const hasStartedRef = useRef(false)
   const t = getUIStrings(locale)
+
+  useEffect(() => {
+    let isCancelled = false
+
+    async function fetchHexagramTranslation() {
+      if (locale === "english") {
+        setTranslatedText(null)
+        return
+      }
+
+      try {
+        const response = await fetch("/api/hexagram-text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ hexagram, locale }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to translate hexagram text")
+        }
+
+        const data = (await response.json()) as {
+          meaning?: string
+          judgment?: string
+          image?: string
+        }
+
+        if (isCancelled) return
+        setTranslatedText({
+          meaning: data.meaning || hexagram.meaning,
+          judgment: data.judgment || hexagram.judgment,
+          image: data.image || hexagram.image,
+        })
+      } catch {
+        if (isCancelled) return
+        setTranslatedText(null)
+      }
+    }
+
+    fetchHexagramTranslation()
+    return () => {
+      isCancelled = true
+    }
+  }, [hexagram, locale])
 
   useEffect(() => {
     if (hasStartedRef.current) return
@@ -162,7 +211,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
             {t.meaning}
           </h3>
           <p className="text-base text-foreground/90 font-serif leading-relaxed italic">
-            {hexagram.meaning}
+            {translatedText?.meaning || hexagram.meaning}
           </p>
         </div>
 
@@ -171,7 +220,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
             {t.judgment}
           </h3>
           <p className="text-base text-foreground/90 font-serif leading-relaxed">
-            {hexagram.judgment}
+            {translatedText?.judgment || hexagram.judgment}
           </p>
         </div>
 
@@ -180,7 +229,7 @@ export function ReadingResult({ hexagram, answers, onRestart, locale }: ReadingR
             {t.image}
           </h3>
           <p className="text-base text-foreground/90 font-serif leading-relaxed">
-            {hexagram.image}
+            {translatedText?.image || hexagram.image}
           </p>
         </div>
       </div>
